@@ -1,0 +1,95 @@
+#!/bin/bash
+
+touch -a  ~/.cache/masgor
+
+while read config seperate_tag value;
+do
+	case $config in
+		dakikaval)
+			minute=$value;;
+		saniyeval)
+			second=$value;;	
+		saat)
+			saat=$value;;
+		dakika)
+			dakika=$value;;
+		saniye)
+			saniye=$value;;
+		saatval)
+			hour=$value;;
+		basla)
+			basla=$value;;
+	esac			
+done < tercihler.cfg													
+
+sure="0"
+echo $saniye
+if [ "$saniye" = "True" ];then
+	second=`echo $second|cut -d . -f1`
+	let "sure = $sure + $second"
+fi	
+echo $dakika
+if [ "$dakika" = "True" ];then
+	minute=`echo $minute|cut -d . -f1`
+	let "sure = $sure + $minute*60"
+fi
+echo $saat
+if [ "$saat" = "True" ];then
+	hour=`echo $hour|cut -d . -f1`
+	let "sure=$sure+$hour*60*60"	
+fi		
+if [ "$sure" = "0" ];then
+	sure="10"
+	echo "Default time value;"
+fi	
+echo $sure "Saniye"
+ 
+if [ "$basla" = "True" ];then 
+	echo "
+[Desktop Entry]
+Exec="$PWD/masgor" 2
+Type=Application
+Icon=$PWD/masgor.svg
+Name=Masgor
+X-GNOME-Autostart-enabled=true
+Encoding=UTF-8" > /tmp/masgor.desktop
+	chmod +x  /tmp/masgor.desktop
+	mv  /tmp/masgor.desktop $HOME/.config/autostart
+else
+	rm -rf  $HOME/.config/autostart/masgor.desktop
+fi
+
+
+go() {
+i="0"
+while true
+do
+	if [ "`(cut tercihler.cfg -d "=" -f2|head -n 8|tail -n1 )`" = "True" ];then 
+		wo $1
+		break
+	fi	
+        let "i=$i+1"
+        if [ "$i" -gt "`(grep $ ~/.cache/masgor -c )`"  ];then
+                i="1"
+        fi
+        gsettings set org.gnome.desktop.background picture-uri "`echo "$(cat  $HOME/.cache/masgor|head -n $i|tail -n 1)"`"
+        sleep  $1
+done
+}
+
+wo() {
+echo "Random Image Show"
+while true
+do
+        gsettings set org.gnome.desktop.background picture-uri  "`echo "$(cat  $HOME/.cache/masgor|shuf -n 1)"`"
+        sleep  $1
+done
+}
+case $1 in
+	1)
+		go $sure ;
+		exit $? ;;
+	2)
+		bash "$PWD/masgor" & bash "$PWD/masgor" 1; exit
+esac   
+
