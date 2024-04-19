@@ -59,6 +59,12 @@ else
 	rm -rf  $HOME/.config/autostart/masgor.desktop
 fi
 
+change_background(){
+	dconf write /org/gnome/desktop/background/picture-uri-dark  "`echo "file:$(cat  $HOME/.cache/masgor|shuf -n 1)"`"
+	gsettings set org.gnome.desktop.background picture-uri-dark  "`echo "file:$(cat  $HOME/.cache/masgor|shuf -n 1)"`"
+	dconf write /org/gnome/desktop/background/picture-uri  "`echo "file:$(cat  $HOME/.cache/masgor|shuf -n 1)"`"
+	gsettings set org.gnome.desktop.background picture-uri "`echo "file:$(cat  $HOME/.cache/masgor|shuf -n 1)"`"	
+}
 
 go() {
 i="0"
@@ -72,7 +78,9 @@ do
         if [ "$i" -gt "`(grep $ ~/.cache/masgor -c )`"  ];then
                 i="1"
         fi
-        gsettings set org.gnome.desktop.background picture-uri "`echo "$(cat  $HOME/.cache/masgor|head -n $i|tail -n 1)"`"
+	
+	change_background
+	
         sleep  $1
 done
 }
@@ -80,8 +88,8 @@ done
 wo() {
 echo "Random Image Show"
 while true
-do
-        gsettings set org.gnome.desktop.background picture-uri  "`echo "$(cat  $HOME/.cache/masgor|shuf -n 1)"`"
+do	
+	change_background
         sleep  $1
 done
 }
