@@ -1,6 +1,7 @@
 #!/bin/bash
 
-touch -a  ~/.cache/masgor
+STORE_FILE="$HOME/.cache/masgor"
+touch -a  "$STORE_FILE"
 
 while read config seperate_tag value;
 do
@@ -20,7 +21,7 @@ do
 		basla)
 			basla=$value;;
 	esac			
-done < tercihler.cfg													
+done < tercihler.cfg										
 
 sure="0"
 echo $saniye
@@ -60,44 +61,49 @@ else
 fi
 
 change_background(){
-	dconf write /org/gnome/desktop/background/picture-uri-dark  "`echo "file:$(cat  $HOME/.cache/masgor|shuf -n 1)"`"
-	gsettings set org.gnome.desktop.background picture-uri-dark  "`echo "file:$(cat  $HOME/.cache/masgor|shuf -n 1)"`"
-	dconf write /org/gnome/desktop/background/picture-uri  "`echo "file:$(cat  $HOME/.cache/masgor|shuf -n 1)"`"
-	gsettings set org.gnome.desktop.background picture-uri "`echo "file:$(cat  $HOME/.cache/masgor|shuf -n 1)"`"	
+	file_="file:${@}"
+	echo $file_
+	[[ -z "$file_" ]] && return 0
+
+#	dconf write /org/gnome/desktop/background/picture-uri-dark "$file_" &>/dev/null  
+	gsettings set org.gnome.desktop.background picture-uri-dark  "$file_" 
+#	dconf write /org/gnome/desktop/background/picture-uri  "$file_" &>/dev/null  
+	gsettings set org.gnome.desktop.background picture-uri "$file_"  
 }
 
 go() {
 i="0"
 while true
 do
-	if [ "`(cut tercihler.cfg -d "=" -f2|head -n 8|tail -n1 )`" = "True" ];then 
+	if [[ "`(cut tercihler.cfg -d "=" -f2|head -n 8|tail -n1 )`" =~ "True" ]];then 
 		wo $1
 		break
 	fi	
-        let "i=$i+1"
-        if [ "$i" -gt "`(grep $ ~/.cache/masgor -c )`"  ];then
-                i="1"
-        fi
-	
-	change_background
-	
-        sleep  $1
+
+	let "i=$i+1"
+
+	if [ "$i" -gt "`(grep $ "$STORE_FILE" -c )`"  ];then
+			i="1"
+	fi
+
+	change_background "$(cat "$STORE_FILE"|head -n ${i}|tail -n 1)"
+	sleep  $1
 done
 }
 
 wo() {
-echo "Random Image Show"
-while true
-do	
-	change_background
-        sleep  $1
-done
+	echo "Random Image Show"
+	while true
+	do	
+		change_background "`cat "$STORE_FILE"|shuf -n1`"
+		sleep  $1
+	done
 }
+
 case $1 in
 	1)
 		go $sure ;
 		exit $? ;;
 	2)
 		bash "$PWD/masgor" & bash "$PWD/masgor" 1; exit
-esac   
-
+esac
